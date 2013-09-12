@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="KAI : DHT storage by Takeshi Inoue" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>KAI</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/synrc/kai">View on GitHub</a>
+
+          <h1 id="project_title">KAI</h1>
+          <h2 id="project_tagline">DHT storage by Takeshi Inoue</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/synrc/kai/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/synrc/kai/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="kai" class="anchor" href="#kai"><span class="octicon octicon-link"></span></a>KAI</h1>
+
+<p>Kai is a distributed key-value datastore, which is mainly inspired
+by Amazon's Dynamo. It brings high scalability and availability
+to your Web sites. You can manage variety of contents with Kai,
+as if Amazon's Dynamo stores shopping carts, catalogs, session states,
+and so forth. Currently, Kai is deployed in a commercial service,
+<a href="http://home.goo.ne.jp">http://home.goo.ne.jp</a>, which is a Japanese social networking service of more
+than 10 million users.</p>
+
+<h2>
+<a name="features" class="anchor" href="#features"><span class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>16 nodes</li>
+<li>2 GB/node, on memory</li>
+<li>1,000 qps for whole system</li>
+<li>&lt; 300ms for requests of 99%</li>
+<li>Fairly balancing loads</li>
+<li>Consitent hashing, nodes, buckets</li>
+<li>Secondary Indexes</li>
+<li>Storage Backends: ETS, DETS</li>
+<li>Quorum coordinator</li>
+<li>Sync data one by another</li>
+<li>Gossip-based protocol membership</li>
+<li>Memcache Interface</li>
+</ul><h2>
+<a name="goal" class="anchor" href="#goal"><span class="octicon octicon-link"></span></a>Goal</h2>
+
+<ul>
+<li>256 nodes</li>
+<li>32 GB/node</li>
+<li>100,000 qps for whole system</li>
+<li>Physical placement</li>
+<li>Merkle Tree sync</li>
+<li>Chord or Kademlia membeship</li>
+</ul><h2>
+<a name="standalone-mode" class="anchor" href="#standalone-mode"><span class="octicon octicon-link"></span></a>Standalone Mode</h2>
+
+<p>For practice, we begin with a stand-alone server, not clustered system.
+The stand-alone Kai is not attractive, because it has no reliability
+(no replication). The behavior is, however, quite similar with that
+of well-known memcached, and so this can be a good starting point.
+Before running Kai, stop a memcached if runnnig, because Kai uses
+the same port number (11211) by default. Set parameters "n", "r",
+and "w" to 1 in the configuration file "sys.config"; other parameters
+remain in default (Details for the parameters are described in Configuration).</p>
+
+<pre><code>[{kai, [
+    {logfile, "kai.log"},
+    {hostname, "localhost"},
+    {rpc_port, 11011},
+    {rpc_max_processes, 30},
+    {memcache_port, 11211},
+    {memcache_max_processes, 10},
+    {max_connections, 32},
+    {n, 1},
+    {r, 1},
+    {w, 1},
+    {number_of_buckets, 1024},
+    {number_of_virtual_nodes, 128},
+    {store, ets},
+    {dets_dir, "/path/to/dir"},
+    {number_of_tables, 256}]}].
+</code></pre>
+
+<h2>
+<a name="cluster-mode" class="anchor" href="#cluster-mode"><span class="octicon octicon-link"></span></a>Cluster Mode</h2>
+
+<p>This section describes how to run multiple Kai nodes as a clustered system.
+While we will run all nodes on a single physical machine for convenience,
+the cluster can be consisted of different machines just by changing IP
+addresses and port numbers in the following example. In this example,
+we run four distinct nodes on a single physical machine. Copy the
+configuration file for them. They are named "kai1.config" to "kai4.config";
+a node configured by kai1.config is called Node1, hereafter.
+To replicate data, set the quorum parameter "n" to the degree of replication.
+In this example, we set "n" to 3 in the configuration file "kai.config".
+Other quorum parameters "r" and "w" is set in according to the quorum conditions.</p>
+
+<table>
+<thead><tr>
+<th>Name</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>n</td>
+<td>3</td>
+</tr>
+<tr>
+<td>r</td>
+<td>2</td>
+</tr>
+<tr>
+<td>w</td>
+<td>2</td>
+</tr>
+</tbody>
+</table><p>Hosts config:</p>
+
+<table>
+<thead><tr>
+<th>Node1</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>rpc_port</td>
+<td>11011</td>
+</tr>
+<tr>
+<td>memcache_port</td>
+<td>11211</td>
+</tr>
+</tbody>
+</table><table>
+<thead><tr>
+<th>Node2</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>rpc_port</td>
+<td>11012</td>
+</tr>
+<tr>
+<td>memcache_port</td>
+<td>11212</td>
+</tr>
+</tbody>
+</table><table>
+<thead><tr>
+<th>Node3</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>rpc_port</td>
+<td>11013</td>
+</tr>
+<tr>
+<td>memcache_port</td>
+<td>11213</td>
+</tr>
+</tbody>
+</table><table>
+<thead><tr>
+<th>Node4</th>
+<th>Value</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>rpc_port</td>
+<td>11014</td>
+</tr>
+<tr>
+<td>memcache_port</td>
+<td>11214</td>
+</tr>
+</tbody>
+</table><p>Staring Node1:</p>
+
+<pre><code>% erl -pa ebin -config kai1
+&gt; application:start(kai).
+</code></pre>
+
+<p>To make a cluster, start Node2 and add it to the cluster (that includes only
+Node1 currently) by informing of their neighbors with function "kai_rpc:check_node/2".</p>
+
+<pre><code>% erl -pa ebin -config kai2
+&gt; application:start(kai).
+&gt; kai_rpc:check_node({{127,0,0,1}, 11012}, {{127,0,0,1}, 11011}).
+&gt; kai_rpc:check_node({{127,0,0,1}, 11011}, {{127,0,0,1}, 11012}).
+</code></pre>
+
+<p>We give a brief explanation this process. A Kai node maintains a node list
+including members of the cluster it belongs to. In the initial state, each
+node list includes only the node itself. By issuing function "kai_rpc:check_node/2",
+a node of the first argument retrieves a node list from another node of
+the second argument, and merge the list with that of itself. By calling
+this function twice, a new node can be added to the cluster; inform a
+new node of any cluster node by the first call, and vice versa (wait
+for finishing data synchronization if some data have already been
+stored in the cluster).</p>
+
+<p>In this example, Node2 (127.0.0.1:11012) gets a node list of
+Node1 (127.0.0.1:11011) by the first "kai_rpc:check_node/2"; Node2 
+knows Node1. The second RPC informs Node1 of Node2.</p>
+
+<p>Here, make sure Node1 and Node2 know each other.</p>
+
+<pre><code>&gt; kai_rpc:node_list({{127,0,0,1}, 11011}).
+{node_list,[{{127,0,0,1},11011},
+        {{127,0,0,1},11012}]}
+
+&gt; kai_rpc:node_list({{127,0,0,1}, 11012}).
+{node_list,[{{127,0,0,1},11011},
+        {{127,0,0,1},11012}]}
+</code></pre>
+
+<p>In the same manner, add Node3 to the cluster.</p>
+
+<pre><code>% erl -pa ebin -config kai3
+&gt; application:start(kai).
+&gt; kai_rpc:check_node({{127,0,0,1}, 11013}, {{127,0,0,1}, 11011}).
+&gt; kai_rpc:check_node({{127,0,0,1}, 11011}, {{127,0,0,1}, 11013}).
+</code></pre>
+
+<p>By the third "kai_rpc:check_node/2", Node3 gets a node list of Node1,
+which includes Node2 as well as Node1. The fourth "kai_rpc:check_node/2"
+informs Node1 of Node3. Now, while Node1 and Node3 know all the three
+nodes, Node2 does not know Node3 yet. Node2, however, gets to know
+Node3 eventually, because each node periodically exchanges its node
+list to a node randomly chosen among the node list. Every node,
+finally, knows each other, and makes the cluster of the three nodes.
+Finally, add Node4 to the cluster.</p>
+
+<pre><code>% erl -pa ebin -config kai4
+&gt; application:start(kai).
+&gt; kai_rpc:check_node({{127,0,0,1}, 11014}, {{127,0,0,1}, 11011}).
+&gt; kai_rpc:check_node({{127,0,0,1}, 11011}, {{127,0,0,1}, 11014}).
+</code></pre>
+
+<p>We make sure whether each node knows all by function "kai_rpc:node_list/1".
+If the cluster is correctly made up, the output includes the four nodes like this.</p>
+
+<pre><code>&gt; kai_rpc:node_list({{127,0,0,1}, 11011}).
+{node_list,[{{127,0,0,1},11011},
+        {{127,0,0,1},11012},
+        {{127,0,0,1},11013},
+        {{127,0,0,1},11014}]}
+</code></pre>
+
+<p>To remove a node, no procedure is needed. This implies that no
+action is needed when a node is accidentally going down. However,
+it's better to remove a node one by one; don't remove more than or
+equal to N nodes before finishing data synchronization.</p>
+
+<h2>
+<a name="statistics" class="anchor" href="#statistics"><span class="octicon octicon-link"></span></a>Statistics</h2>
+
+<p>Statistics for the Kai node can be retrieved by issuing stats
+command of memcache APIs. The parameters without "kai_" or "erlang_" prefix
+are in common with memcache APIs. Some of Kai related parameters are
+explained in Configuration in detail.</p>
+
+<table>
+<thead><tr>
+<th>Name</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>uptime</td>
+<td>Number of seconds this server has been running.</td>
+</tr>
+<tr>
+<td>time</td>
+<td>Current UNIX time according to the server.</td>
+</tr>
+<tr>
+<td>version</td>
+<td>Version string of the Kai node.</td>
+</tr>
+<tr>
+<td>bytes</td>
+<td>Current number of bytes used by the Kai node to store items.</td>
+</tr>
+<tr>
+<td>curr_items</td>
+<td>Current number of items stored by the Kai node.</td>
+</tr>
+<tr>
+<td>curr_connections</td>
+<td>Number of open connections.</td>
+</tr>
+<tr>
+<td>cmd_get</td>
+<td>Successful retrieval requests processed by the Kai node.</td>
+</tr>
+<tr>
+<td>cmd_set</td>
+<td>Successful storage requests processed by the Kai node.</td>
+</tr>
+<tr>
+<td>bytes_read</td>
+<td>Total number of bytes transferred from the Kai node.</td>
+</tr>
+<tr>
+<td>bytes_write</td>
+<td>Total number of bytes transferred to the Kai node.</td>
+</tr>
+<tr>
+<td>kai_node</td>
+<td>Socket address for internal RPC in the Kai node.</td>
+</tr>
+<tr>
+<td>kai_quorum</td>
+<td>Parameters for the quorum protocol; i.e. N:R:W.</td>
+</tr>
+<tr>
+<td>kai_buckets</td>
+<td>Number of buckets in the Kai cluster.</td>
+</tr>
+<tr>
+<td>kai_vnodes</td>
+<td>Number of virtual nodes in the Kai node.</td>
+</tr>
+<tr>
+<td>kai_store</td>
+<td>Storage type used by the Kai node; ets or dets.</td>
+</tr>
+<tr>
+<td>kai_curr_nodes</td>
+<td>Membership in the current cluster.</td>
+</tr>
+<tr>
+<td>kai_unreconciled</td>
+<td>Cumulative number of retrieval requests with confliction.</td>
+</tr>
+<tr>
+<td>erlang_procs</td>
+<td>Number of Erlang processes.</td>
+</tr>
+<tr>
+<td>erlang_version</td>
+<td>Version string of Erlang.</td>
+</tr>
+</tbody>
+</table><p>Some statistics (bytes, curr_items, cmd_get, cmd_set, bytes_read, and bytes_write) can be
+drawn by Cacti, which is a complete network graphing solution designed to harness the power
+of RRDTool's data storage and graphing functionality.</p>
+
+<p><img src="http://sourceforge.net/apps/mediawiki/kai/nfs/project/k/ka/kai/8/8d/Deployment_01.png" alt="Cacti"></p>
+
+<h2>
+<a name="credits" class="anchor" href="#credits"><span class="octicon octicon-link"></span></a>Credits</h2>
+
+<ul>
+<li>Takeshi Inoue</li>
+<li>Maxim Sokhatsky</li>
+</ul><p>OM A HUM</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">KAI maintained by <a href="https://github.com/synrc">synrc</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
