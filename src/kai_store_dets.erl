@@ -11,6 +11,7 @@
 % the License.
 
 -module(kai_store_dets).
+-compile(export_all).
 -behaviour(gen_server).
 
 -export([start_link/1]).
@@ -127,6 +128,7 @@ info(Name, State) ->
           end,
           lists:seq(1, State#state.number_of_tables)
          ),
+    io:format("DETS: ~p~n",[Values]),
     {reply, lists:sum(Values), State}.
 
 handle_call(stop, _From, State) ->
@@ -141,6 +143,8 @@ handle_call({put, Data}, _From, State) ->
     do_put(Data, State);
 handle_call({delete, Data}, _From, State) ->
     do_delete(Data, State);
+handle_call({bucket, Name}, _From, State) ->
+    {reply,bucket_to_table(Name, State),State};
 handle_call({info, Name}, _From, State) ->
     info(Name, State).
 handle_cast(_Msg, State) ->

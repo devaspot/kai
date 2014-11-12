@@ -12,7 +12,7 @@
 
 -module(kai_hash).
 -behaviour(gen_server).
-
+-compile(export_all).
 -export([start_link/0, stop/0]).
 -export([
     update_nodes/2, find_bucket/1, find_replica/1, find_nodes/1,
@@ -36,7 +36,7 @@ start_link() ->
 init(_Args) ->
     ets:new(node_list, [set, private, named_table]),
     ets:new(virtual_node_list, [ordered_set, private, named_table]),
-    ets:new(buckets, [set, private, named_table]),
+    ets:new(buckets, [set, public, named_table]),
 
     {node_info, LocalNode, Info} = kai_config:node_info(),
     update_nodes([{LocalNode, Info}], [], _State = []),

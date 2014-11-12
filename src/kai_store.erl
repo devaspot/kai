@@ -38,3 +38,5 @@ delete(Data) ->
     gen_server:call(?SERVER, {delete, Data}).
 info(Name) ->
     gen_server:call(?SERVER, {info, Name}).
+bucket(Name) ->
+    gen_server:call(?SERVER, {bucket, Name}).

@@ -24,7 +24,7 @@
     {n, 3},
     {r, 2},
     {w, 2},
-    {number_of_buckets, 1024},
+    {number_of_buckets, 10},
     {number_of_virtual_nodes, 128},
     {store, dets},
     {dets_dir, "kai"},
