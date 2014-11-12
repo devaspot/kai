@@ -1,0 +1,33 @@
+{application, kai,
+ [{description, "KAI Dynamo Inspired DHT"},
+  {vsn, "1"},
+  {modules, [
+      kai, kai_sup, kai_memcache, kai_rpc, kai_tcp_server, kai_coordinator,
+      kai_membership, kai_sync, kai_connection, kai_version, kai_stat,
+      kai_store, kai_hash, kai_log, kai_config
+  ]},
+  {registered, [
+      kai_sup, kai_membership, kai_sync, kai_connection, kai_version,
+      kai_stat, kai_store, kai_hash, kai_log, kai_config
+  ]},
+  {applications, [kernel, stdlib]},
+  {mod, {kai, []}},
+  {start_phases, []},
+  {env, [
+    {logfile, "kai.log"},
+    {hostname, "localhost"},
+    {rpc_port, 11011},
+    {rpc_max_processes, 30},
+    {memcache_port, 11211},
+    {memcache_max_processes, 10},
+    {max_connections, 32},
+    {n, 3},
+    {r, 2},
+    {w, 2},
+    {number_of_buckets, 1024},
+    {number_of_virtual_nodes, 128},
+    {store, dets},
+    {dets_dir, "kai"},
+    {number_of_tables, 1024}
+  ]}
+ ]}.
